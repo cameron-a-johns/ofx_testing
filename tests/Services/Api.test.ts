@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchCurrencyRate } from './Api';
+import { fetchCurrencyRate } from '../../src/Services/Api';
 
 // Mock the JSON imports
 vi.mock('../Libs/CountryCurrency.json', () => ({
