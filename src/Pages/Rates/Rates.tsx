@@ -11,6 +11,7 @@ import classes from './Rates.module.css';
 import CountryData from '../../Libs/Countries.json';
 import countryToCurrency from '../../Libs/CountryCurrency.json';
 import { calculateTradeValues } from '../../Services/Math';
+import { fetchCurrencyRate } from '../../Services/Api';
 
 let countries = CountryData.CountryCodes;
 
@@ -37,32 +38,9 @@ const Rates = () => {
         if (!loading) {
             setLoading(true);
 
-            const fromCurrencyCode = countryToCurrency[fromCurrency as keyof typeof countryToCurrency];
-            const toCurrencyCode = countryToCurrency[toCurrency as keyof typeof countryToCurrency];
+            const rate = await fetchCurrencyRate(fromCurrency, toCurrency, DEFAULT_RATE);
 
-            const endpoint = "https://rates.staging.api.paytron.com/rate/public";
-  
-            const url = `${endpoint}?sellCurrency=${fromCurrencyCode}&buyCurrency=${toCurrencyCode}`;
-
-            try {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                
-
-                setExchangeRate(data.retailRate || DEFAULT_RATE);
-            } catch (error) {
-                console.error("Could not fetch exchange rate:", error);
-            }
+            setExchangeRate(rate);
 
             setLoading(false);
         }

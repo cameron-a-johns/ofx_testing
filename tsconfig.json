@@ -17,5 +17,5 @@
     "jsx": "react-jsx",
     "types": ["vite/client", "vitest/globals", "vite-plugin-svgr/client"]
   },
-  "include": ["src", "./declaration.d.ts"],
+  "include": ["src", "./declaration.d.ts", "tests/Components/DropDown.test.tsx", "tests/Services/Math.test.ts"],
 }
