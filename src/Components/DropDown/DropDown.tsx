@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import classes from './DropDown.module.css';
 
 const DropDown = (props) => {
     const [open, setOpen] = useState(false);
 
-    const handleOpen = () => {
-        setOpen(!open);
+    const toggleOpen = (e) => {
+        setOpen((current) => !current);
+        e.stopPropagation();
     };
 
     const handleSelect = (key) => {
@@ -14,10 +15,25 @@ const DropDown = (props) => {
         setOpen(false);
     };
 
+    useEffect(() => {
+        const closeIfOpen = () => {
+            setOpen((current) => {
+                if (current) {
+                    return false;
+                }
+
+                return current;
+            })
+        }
+        document.addEventListener('click', closeIfOpen);
+
+        return () => document.removeEventListener('click', closeIfOpen);
+    }, [])
+
     return (
         <div className={`${classes.container} ${props.className}`} style={props.style}>
             {props.label && <span>{props.label}</span>}
-            <button onClick={handleOpen} className={classes.dropdown}>
+            <button onClick={toggleOpen} className={classes.dropdown} tabIndex={0}>
                 {props.leftIcon}
                 <span className={classes.dropdownText}>{props.selected}</span>
 
