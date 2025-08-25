@@ -16,6 +16,12 @@ const DropDown = (props) => {
     };
 
     useEffect(() => {
+        if (props.disabled) {
+            setOpen(false);
+        }
+    }, [props.disabled])
+
+    useEffect(() => {
         const closeIfOpen = () => {
             setOpen((current) => {
                 if (current) {
@@ -33,7 +39,7 @@ const DropDown = (props) => {
     return (
         <div className={`${classes.container} ${props.className}`} style={props.style}>
             {props.label && <span>{props.label}</span>}
-            <button onClick={toggleOpen} className={classes.dropdown} tabIndex={0}>
+            <button onClick={toggleOpen} className={classes.dropdown} tabIndex={0} disabled={props.disabled}>
                 {props.leftIcon}
                 <span className={classes.dropdownText}>{props.selected}</span>
 

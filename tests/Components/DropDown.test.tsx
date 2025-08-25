@@ -378,4 +378,207 @@ describe('DropDown Component', () => {
     expect(mockSetSelected).toHaveBeenCalledWith('opt2');
     expect(mockSetSelected).toHaveBeenCalledTimes(2);
   });
+
+  describe('Disabled State', () => {
+    it('renders with disabled button when disabled prop is true', () => {
+      render(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={true}
+        />
+      );
+      
+      const button = screen.getByRole('button');
+      expect(button).toBeDisabled();
+    });
+
+    it('does not render with disabled button when disabled prop is false', () => {
+      render(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={false}
+        />
+      );
+      
+      const button = screen.getByRole('button');
+      expect(button).not.toBeDisabled();
+    });
+
+    it('does not render with disabled button when disabled prop is not provided', () => {
+      render(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+        />
+      );
+      
+      const button = screen.getByRole('button');
+      expect(button).not.toBeDisabled();
+    });
+
+    it('does not open menu when disabled and clicked', () => {
+      render(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={true}
+        />
+      );
+      
+      const button = screen.getByRole('button');
+      fireEvent.click(button);
+      
+      expect(screen.queryByRole('list')).not.toBeInTheDocument();
+      expect(screen.queryByText('Option 1')).not.toBeInTheDocument();
+    });
+
+    it('closes menu when disabled prop changes from false to true', async () => {
+      const { rerender } = render(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={false}
+        />
+      );
+      
+      const button = screen.getByRole('button');
+      
+      // Open menu first
+      fireEvent.click(button);
+      expect(screen.getByRole('list')).toBeInTheDocument();
+      
+      // Change to disabled
+      rerender(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={true}
+        />
+      );
+      
+      await waitFor(() => {
+        expect(screen.queryByRole('list')).not.toBeInTheDocument();
+      });
+    });
+
+    it('keeps menu closed when disabled prop changes from true to false', async () => {
+      const { rerender } = render(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={true}
+        />
+      );
+      
+      // Menu should be closed when disabled
+      expect(screen.queryByRole('list')).not.toBeInTheDocument();
+      
+      // Change to enabled
+      rerender(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={false}
+        />
+      );
+      
+      // Menu should still be closed (doesn't auto-open)
+      expect(screen.queryByRole('list')).not.toBeInTheDocument();
+    });
+
+    it('can open menu when disabled is changed to false and clicked', () => {
+      const { rerender } = render(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={true}
+        />
+      );
+      
+      const button = screen.getByRole('button');
+      
+      // Change to enabled
+      rerender(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={false}
+        />
+      );
+      
+      // Now should be able to open menu
+      fireEvent.click(button);
+      expect(screen.getByRole('list')).toBeInTheDocument();
+    });
+
+    it('does not call setSelected when disabled and option is selected', () => {
+      const { rerender } = render(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={false}
+        />
+      );
+      
+      const button = screen.getByRole('button');
+      
+      // Open menu first
+      fireEvent.click(button);
+      
+      // Disable the dropdown
+      rerender(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={true}
+        />
+      );
+      
+      // Try to click an option (should not work since menu is closed)
+      expect(screen.queryByText('Option 1')).not.toBeInTheDocument();
+      expect(mockSetSelected).not.toHaveBeenCalled();
+    });
+
+    it('maintains disabled state across re-renders', () => {
+      const { rerender } = render(
+        <DropDown 
+          selected="Current Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={true}
+        />
+      );
+      
+      let button = screen.getByRole('button');
+      expect(button).toBeDisabled();
+      
+      // Re-render with same props
+      rerender(
+        <DropDown 
+          selected="Different Selection"
+          setSelected={mockSetSelected}
+          options={mockOptions}
+          disabled={true}
+        />
+      );
+      
+      button = screen.getByRole('button');
+      expect(button).toBeDisabled();
+      expect(screen.getByText('Different Selection')).toBeInTheDocument();
+    });
+  });
 });

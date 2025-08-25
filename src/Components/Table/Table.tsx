@@ -2,7 +2,7 @@ import classes from './Table.module.css';
 
 const Table = (props) => {
     return (
-        <table className={`${classes.table} ${props.className}`} style={props.style}>
+        <table className={`${classes.table} ${props.className} ${props.loading ? classes.loading : ''}`} style={props.style}>
             {props.label && <caption>{props.label}</caption>}
             {props.headers && (
                 <thead>
@@ -34,6 +34,7 @@ const Table = (props) => {
 //     label: PropTypes.string,
 //     className: PropTypes.string,
 //     style: PropTypes.object,
+//     loading: PropTypes.boolean,
 // };
 
 export default Table;

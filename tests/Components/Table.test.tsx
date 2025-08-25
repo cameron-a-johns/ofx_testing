@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import Table from '../../src/Components/Table';
+import classes from '../../src/Components/Table/Table.module.css';
 
 const mockHeaders = [
   { label: 'Name', key: 'name' },
@@ -298,5 +299,203 @@ describe('Table Component', () => {
     
     expect(thead).toBeInTheDocument();
     expect(tbody).toBeInTheDocument();
+  });
+
+  describe('Loading State', () => {
+    it('applies loading class when loading prop is true', () => {
+      render(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+          loading={true}
+        />
+      );
+      
+      const table = screen.getByRole('table');
+      expect(table).toHaveClass(classes.loading);
+    });
+
+    it('does not apply loading class when loading prop is false', () => {
+      render(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+          loading={false}
+        />
+      );
+      
+      const table = screen.getByRole('table');
+      expect(table).not.toHaveClass(classes.loading);
+    });
+
+    it('does not apply loading class when loading prop is not provided', () => {
+      render(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+        />
+      );
+      
+      const table = screen.getByRole('table');
+      expect(table).not.toHaveClass(classes.loading);
+    });
+
+    it('can combine loading class with custom className', () => {
+      render(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+          loading={true}
+          className="custom-table"
+        />
+      );
+      
+      const table = screen.getByRole('table');
+      expect(table).toHaveClass(classes.loading);
+      expect(table).toHaveClass('custom-table');
+    });
+
+    it('changes loading state when prop changes from false to true', () => {
+      const { rerender } = render(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+          loading={false}
+        />
+      );
+      
+      let table = screen.getByRole('table');
+      expect(table).not.toHaveClass(classes.loading);
+      
+      rerender(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+          loading={true}
+        />
+      );
+      
+      table = screen.getByRole('table');
+      expect(table).toHaveClass(classes.loading);
+    });
+
+    it('changes loading state when prop changes from true to false', () => {
+      const { rerender } = render(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+          loading={true}
+        />
+      );
+      
+      let table = screen.getByRole('table');
+      expect(table).toHaveClass(classes.loading);
+      
+      rerender(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+          loading={false}
+        />
+      );
+      
+      table = screen.getByRole('table');
+      expect(table).not.toHaveClass(classes.loading);
+    });
+
+    it('maintains loading state across re-renders with different data', () => {
+      const newData = [
+        { key: '4', name: 'New User', age: 40, city: 'Miami' }
+      ];
+      
+      const { rerender } = render(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+          loading={true}
+        />
+      );
+      
+      let table = screen.getByRole('table');
+      expect(table).toHaveClass(classes.loading);
+      expect(screen.getByText('John Doe')).toBeInTheDocument();
+      
+      rerender(
+        <Table 
+          data={newData}
+          headers={mockHeaders}
+          loading={true}
+        />
+      );
+      
+      table = screen.getByRole('table');
+      expect(table).toHaveClass(classes.loading);
+      expect(screen.getByText('New User')).toBeInTheDocument();
+      expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
+    });
+
+    it('loading state works with empty data', () => {
+      render(
+        <Table 
+          data={[]}
+          headers={mockHeaders}
+          loading={true}
+        />
+      );
+      
+      const table = screen.getByRole('table');
+      expect(table).toHaveClass(classes.loading);
+      
+      // Should still have header row
+      const rows = screen.getAllByRole('row');
+      expect(rows).toHaveLength(1);
+    });
+
+    it('loading state works with missing headers', () => {
+      render(
+        <Table 
+          data={mockData}
+          loading={true}
+        />
+      );
+      
+      const table = screen.getByRole('table');
+      expect(table).toHaveClass(classes.loading);
+      
+      // Should not have rows without headers
+      expect(screen.queryByRole('row')).not.toBeInTheDocument();
+    });
+
+    it('loading state works with label', () => {
+      render(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+          loading={true}
+          label="Loading Table"
+        />
+      );
+      
+      const table = screen.getByRole('table');
+      expect(table).toHaveClass(classes.loading);
+      expect(screen.getByText('Loading Table')).toBeInTheDocument();
+    });
+
+    it('loading overlay styling is applied correctly', () => {
+      render(
+        <Table 
+          data={mockData}
+          headers={mockHeaders}
+          loading={true}
+        />
+      );
+      
+      const table = screen.getByRole('table');
+      expect(table).toHaveClass(classes.loading);
+      expect(table).toHaveClass(classes.table);
+      
+      // Verify that the loading class is properly applied which would trigger the CSS overlay
+      expect(table.className).toContain(classes.loading);
+    });
   });
 });

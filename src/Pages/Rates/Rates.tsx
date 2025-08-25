@@ -74,6 +74,7 @@ const Rates = () => {
                 <div className={classes.rowWrapper}>
                     <div>
                         <DropDown
+                            disabled={loading}
                             leftIcon={<Flag code={fromCurrency} />}
                             label={'From'}
                             selected={getCurrencyFromCountry(fromCurrency)}
@@ -101,6 +102,7 @@ const Rates = () => {
 
                     <div>
                         <DropDown
+                            disabled={loading}
                             leftIcon={<Flag code={toCurrency} />}
                             label={'To'}
                             selected={getCurrencyFromCountry(toCurrency)}
@@ -136,8 +138,9 @@ const Rates = () => {
 
                 </div>
 
-                {tradeValues && !loading && (
+                {tradeValues && (
                     <Table
+                        loading={loading}
                         style={{ marginTop: '20px' }}
                         label='Trade Details'
                         data={[tradeValues]}
