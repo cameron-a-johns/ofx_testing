@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import DropDown from '../../Components/DropDown';
 import ProgressBar from '../../Components/ProgressBar';
 import Loader from '../../Components/Loader';
@@ -11,7 +11,8 @@ import classes from './Rates.module.css';
 import CountryData from '../../Libs/Countries.json';
 import countryToCurrency from '../../Libs/CountryCurrency.json';
 import { calculateTradeValues } from '../../Services/Math';
-import { fetchCurrencyRate } from '../../Services/Api';
+import { fetchCurrencyRate, isOkResult } from '../../Services/Api';
+import Table from '../../Components/Table';
 
 let countries = CountryData.CountryCodes;
 
@@ -19,28 +20,36 @@ let countries = CountryData.CountryCodes;
 const OFX_RATE = 0.0005;
 const DEFAULT_RATE = 0.7456;
 
+const getCurrencyFromCountry = (country: string): string => countryToCurrency[country as keyof typeof countryToCurrency];
+
 const Rates = () => {
     const [fromCurrency, setFromCurrency] = useState('AU');
     const [toCurrency, setToCurrency] = useState('US');
     const [amount, setAmount] = useState(100);
+    const [roundResults, setRoundResults] = useState(true);
 
-    const [exchangeRate, setExchangeRate] = useState(DEFAULT_RATE);
+    const [exchangeRate, setExchangeRate] = useState<number | undefined>(DEFAULT_RATE);
     const [progression, setProgression] = useState(0);
     const [loading, setLoading] = useState(false);
 
-    const tradeValues = calculateTradeValues(amount, exchangeRate, OFX_RATE);
+
+    const tradeValues = calculateTradeValues(amount, exchangeRate || 0, OFX_RATE, roundResults ? 2 : 20, getCurrencyFromCountry(fromCurrency), getCurrencyFromCountry(toCurrency));
 
     const Flag = ({ code }: { code: string }) => (
         <img alt={code || ''} src={`/img/flags/${code || ''}.svg`} width="20px" className={classes.flag} />
     );
 
-    const fetchData = async () => {
+    const fetchData = async ({overrideCurrency, overrideToCurrency}: {overrideCurrency?: string, overrideToCurrency?: string}) => {
         if (!loading) {
             setLoading(true);
 
-            const rate = await fetchCurrencyRate(fromCurrency, toCurrency, DEFAULT_RATE);
+            const rate = await fetchCurrencyRate(overrideCurrency || fromCurrency, overrideToCurrency || toCurrency, DEFAULT_RATE);
 
-            setExchangeRate(rate);
+            if (isOkResult(rate)) {
+                setExchangeRate(rate.data.retailRate);
+            } else {
+                setExchangeRate(undefined);
+            }
 
             setLoading(false);
         }
@@ -50,7 +59,7 @@ const Rates = () => {
     useAnimationFrame(!loading, (deltaTime) => {
         setProgression((prevState) => {
             if (prevState > 0.998) {
-                fetchData();
+                fetchData({});
                 return 0;
             }
             return (prevState + deltaTime * 0.0001) % 1;
@@ -67,14 +76,15 @@ const Rates = () => {
                         <DropDown
                             leftIcon={<Flag code={fromCurrency} />}
                             label={'From'}
-                            selected={countryToCurrency[fromCurrency as keyof typeof countryToCurrency]}
+                            selected={getCurrencyFromCountry(fromCurrency)}
                             options={countries.map(({ code }) => ({
-                                option: countryToCurrency[code as keyof typeof countryToCurrency],
+                                option: getCurrencyFromCountry(code),
                                 key: code,
                                 icon: <Flag code={code} />,
                             }))}
                             setSelected={(key: string) => {
                                 setFromCurrency(key);
+                                fetchData({ overrideCurrency: key });
                             }}
                             style={{ marginRight: '20px' }}
                         />
@@ -85,46 +95,57 @@ const Rates = () => {
                             <img src="/img/icons/Transfer.svg" alt="Transfer icon" />
                         </div>
 
-                        <div className={classes.rate}>{exchangeRate}</div>
+                        <div className={classes.rate}>{exchangeRate || 'Error'}</div>
+                        {exchangeRate === undefined && <div className={classes.rateError}>Rate error, please refresh the page</div>}
                     </div>
 
                     <div>
                         <DropDown
                             leftIcon={<Flag code={toCurrency} />}
                             label={'To'}
-                            selected={countryToCurrency[toCurrency as keyof typeof countryToCurrency]}
+                            selected={getCurrencyFromCountry(toCurrency)}
                             options={countries.map(({ code }) => ({
-                                option: countryToCurrency[code as keyof typeof countryToCurrency],
+                                option: getCurrencyFromCountry(code),
                                 key: code,
                                 icon: <Flag code={code} />,
                             }))}
                             setSelected={(key: string) => {
                                 setToCurrency(key);
+                                fetchData({ overrideToCurrency: key });
                             }}
                             style={{ marginLeft: '20px' }}
                         />
                     </div>
                 </div>
 
-                <Input
-                    onChange={setAmount}
-                    value={amount}
-                    label='Amount'
-                    style={{ marginTop: '20px'}}
-                    type='number'
-                />
+                <div className={classes.rowWrapper} style={{ alignItems: 'center' }}>
+                    <Input
+                        onChange={setAmount}
+                        value={amount}
+                        label='Amount'
+                        style={{ marginTop: '20px'}}
+                        type='number'
+                    />
 
-                <div>
-                    <h3>Trade result:</h3>
-                    {tradeValues && <div className={classes.tradeResults}>
-                        <span><b>Actual:</b>
-                            {tradeValues.actual}
-                        </span>
-                        <span><b>Marked:</b>
-                            {tradeValues.marked}
-                        </span>
-                    </div>}
+                    <div className={classes.checkboxWrapper}>
+                        <label htmlFor='roundResults' style={{ fontSize: '14px' }}>Round results</label>
+                        <input id='roundResults' className={classes.checkbox} type='checkbox' checked={roundResults} onChange={() => {
+                            setRoundResults(!roundResults)
+                        }} />
+                    </div>
+
                 </div>
+
+                {tradeValues && !loading && (
+                    <Table
+                        style={{ marginTop: '20px' }}
+                        label='Trade Details'
+                        data={[tradeValues]}
+                        headers={[{ label: 'Trade cost', key: 'tradeCost' }, { label: 'Trade value', key: 'tradeValue' }, { label: 'Trade value received', key: 'tradeValueReceived' }, { label: 'OFX margin cost', key: 'cost' }]}
+                    >
+                        
+                    </Table>
+                )}
 
                 <ProgressBar
                     progress={progression}

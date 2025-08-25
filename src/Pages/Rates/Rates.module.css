@@ -22,25 +22,31 @@
 .rowWrapper {
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
 }
 .exchangeWrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    margin: 0px 30px;
+    max-width: 100px;
 }
 
 .transferIcon {
-    margin-bottom: 18px;
+    margin-bottom: 4px;
+    color: #142557;
 }
-.transferIcon > svg > path {
-    fill: #142557;
-}
+
 .rate {
     font-size: 18px;
     color: #142557;
     opacity: 0.7;
+}
+
+.rateError {
+    font-size: 12px;
+    color: #ff1717;
+    text-align: center;
 }
 
 .flag {
@@ -62,4 +68,28 @@
 .tradeResults {
     display: flex;
     flex-direction: column;
+}
+
+.valueWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.checkboxWrapper {
+    display: flex;
+    flex-direction: column;
+    width: 400px;
+}
+
+.checkbox {
+    margin: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.checkbox:hover {
+    cursor: pointer;
 }

@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-
 import classes from './Input.module.css';
 
 
